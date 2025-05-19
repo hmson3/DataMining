@@ -4,8 +4,8 @@ from leidenalg import find_partition, ModularityVertexPartition
 import igraph as ig
 
 def leiden_lpa_hybrid(G_nx, core_ratio=0.2, max_iter=10, seed=None):
-    degrees = dict(G_nx.degree())
-    sorted_nodes = sorted(degrees, key=degrees.get, reverse=True)
+    pagerank = nx.pagerank(G_nx, alpha=0.85)
+    sorted_nodes = sorted(pagerank, key=pagerank.get, reverse=True)
     num_core = int(len(sorted_nodes) * core_ratio)
     V_core = sorted_nodes[:num_core]
     V_periphery = sorted_nodes[num_core:]

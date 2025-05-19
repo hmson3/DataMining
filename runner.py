@@ -9,7 +9,7 @@ from leiden_lpa import leiden_lpa_hybrid
 from evaluation import compute_modularity, compute_nmi
 
 # 버전 이름을 명확히 설정
-ALGORITHM_VERSION = "Leiden-LPA-v2"
+ALGORITHM_VERSION = "Leiden-LPA-v3"
 
 def run_leiden(G, seed=None):
     import igraph as ig
@@ -60,7 +60,7 @@ def run_experiment(dataset_base="datasets", repeat=10, output_csv=f"results/resu
 
                 # 개선 알고리즘 실행
                 start = time.time()
-                hybrid_labels = leiden_lpa_hybrid(G, core_ratio=0.2, seed=seed)
+                hybrid_labels = leiden_lpa_hybrid(G, seed=seed)
                 t1 = time.time() - start
                 m1 = compute_modularity(G, hybrid_labels)
                 n1 = compute_nmi(hybrid_labels, gt)
