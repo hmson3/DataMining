@@ -1,5 +1,5 @@
 import networkx as nx
-from collections import Counter
+from collections import Counter, defaultdict
 from leidenalg import find_partition, ModularityVertexPartition
 import igraph as ig
 
@@ -31,9 +31,12 @@ def leiden_lpa_hybrid(G_nx, core_ratio=0.2, max_iter=10, seed=None):
     for _ in range(max_iter):
         updated = False
         for v in V_periphery:
-            neighbor_labels = [labels[n] for n in G_nx.neighbors(v) if labels[n] is not None]
-            if neighbor_labels:
-                most_common = Counter(neighbor_labels).most_common(1)[0][0]
+            scores = defaultdict(float)
+            for n in G_nx.neighbors(v):
+                if labels[n] is not None:
+                    scores[labels[n]] += pagerank[n]
+            if scores:
+                most_common = max(scores.items(), key=lambda x: x[1])[0]
                 if labels[v] != most_common:
                     labels[v] = most_common
                     updated = True
