@@ -40,4 +40,18 @@ def leiden_lpa_hybrid(G_nx, core_ratio=0.2, max_iter=10, seed=None):
         if not updated:
             break
 
+    # 전체 그래프에 대해 1회 LPA refinement
+    all_nodes = list(G_nx.nodes())
+    for _ in range(1):
+        updated = False
+        for v in all_nodes:
+            neighbor_labels = [labels[n] for n in G_nx.neighbors(v) if labels[n] is not None]
+            if neighbor_labels:
+                most_common = Counter(neighbor_labels).most_common(1)[0][0]
+                if labels[v] != most_common:
+                    labels[v] = most_common
+                    updated = True
+        if not updated:
+            break
+
     return labels

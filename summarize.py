@@ -1,10 +1,10 @@
 import pandas as pd
 
 # 버전 설정 (예: "Leiden-LPA-v1")
-ALGORITHM_VERSION = "Leiden-LPA-v1"
+ALGORITHM_VERSION = "Leiden-LPA-v2"
 
 # 불러오기 및 전처리
-df = pd.read_csv("results/repeat_raw_results_v1.csv")
+df = pd.read_csv(f"results/results_{ALGORITHM_VERSION}.csv")
 df = df[df["Algorithm"].isin(["Leiden", ALGORITHM_VERSION])]
 
 # 중복 제거 (선택)
@@ -42,6 +42,6 @@ summary = summary.sort_values(by=["n", "mu", "Algorithm"])
 
 # 결과 저장
 summary = summary[["Graph", "Algorithm", "Time (s)", "Modularity", "NMI"]]
-versioned_path = f"results/summary_results_{ALGORITHM_VERSION}.csv"
+versioned_path = f"results/summary_{ALGORITHM_VERSION}.csv"
 summary.to_csv(versioned_path, index=False)
 print(f"✅ {versioned_path} SAVED!")
