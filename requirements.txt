@@ -1,0 +1,5 @@
+networkx
+python-igraph
+leidenalg
+scikit-learn
+cdlib
