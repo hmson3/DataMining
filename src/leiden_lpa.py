@@ -1,71 +1,64 @@
 import networkx as nx
-from collections import defaultdict
+from collections import Counter
 from leidenalg import find_partition, ModularityVertexPartition
 import igraph as ig
 
-def neighborhood_overlap(G, v, u):
-    """v와 u 사이의 이웃 유사도(공통 이웃 비율)"""
-    neighbors_v = set(G.neighbors(v))
-    neighbors_u = set(G.neighbors(u))
-    if not neighbors_v or not neighbors_u:
-        return 0.0
-    intersection = len(neighbors_v & neighbors_u)
-    union = len(neighbors_v | neighbors_u)
-    return intersection / union if union > 0 else 0.0
+def adaptive_core_ratio(G):
+    avg_deg = sum(dict(G.degree()).values()) / G.number_of_nodes()
+    if avg_deg < 3:
+        return 0.1
+    elif avg_deg < 5:
+        return 0.2
+    else:
+        return 0.3
 
-def leiden_lpa_hybrid(G_nx, core_ratio=0.2, max_iter=10, alpha=0.5, beta=0.5, seed=None):
+def leiden_lpa_hybrid(G_nx, max_iter=10, max_pass=3, entropy_threshold=0.01, seed=None):
     pagerank = nx.pagerank(G_nx, alpha=0.85)
     degree = dict(G_nx.degree())
+    labels = {v: None for v in G_nx.nodes()}
+    prev_modularity = -1.0
 
-    # Step 1. Core 노드 선정 (PageRank 기준)
-    sorted_nodes = sorted(pagerank, key=pagerank.get, reverse=True)
-    num_core = int(len(sorted_nodes) * core_ratio)
-    V_core = sorted_nodes[:num_core]
-    V_periphery = sorted_nodes[num_core:]
+    for iteration in range(max_pass):
+        # Step 1. Adaptive Core Ratio
+        core_ratio = adaptive_core_ratio(G_nx)
+        sorted_nodes = sorted(pagerank, key=pagerank.get, reverse=True)
+        num_core = int(len(sorted_nodes) * core_ratio)
+        V_core = sorted_nodes[:num_core]
+        V_periphery = sorted_nodes[num_core:]
 
-    # Step 2. Core 부분 그래프 Leiden 클러스터링
-    G_core_nx = G_nx.subgraph(V_core).copy()
-    G_core_ig = ig.Graph.TupleList(G_core_nx.edges(), directed=False)
-    part = find_partition(G_core_ig, ModularityVertexPartition, seed=seed) if seed else find_partition(G_core_ig, ModularityVertexPartition)
-    C_core = {v["name"]: part.membership[i] for i, v in enumerate(G_core_ig.vs)}
+        # Step 2. Leiden clustering on core
+        G_core_nx = G_nx.subgraph(V_core).copy()
+        G_core_ig = ig.Graph.TupleList(G_core_nx.edges(), directed=False)
+        part = find_partition(G_core_ig, ModularityVertexPartition, seed=seed) if seed else find_partition(G_core_ig, ModularityVertexPartition)
+        core_labels = {v["name"]: part.membership[i] for i, v in enumerate(G_core_ig.vs)}
 
-    # Step 3. 라벨 초기화
-    labels = {v: C_core[v] if v in C_core else None for v in G_nx.nodes()}
-
-    # Step 4. 비코어 노드 업데이트 (soft-weighted voting)
-    for _ in range(max_iter):
-        updated = False
-        for v in V_periphery:
-            scores = defaultdict(float)
-            for n in G_nx.neighbors(v):
-                if labels[n] is not None:
-                    trust = alpha * pagerank[n] + (1 - alpha) * degree[n]
-                    sim = neighborhood_overlap(G_nx, v, n)
-                    scores[labels[n]] += trust * (1 + beta * sim)
-            if scores:
-                best_label = max(scores.items(), key=lambda x: x[1])[0]
-                if labels[v] != best_label:
-                    labels[v] = best_label
-                    updated = True
-        if not updated:
-            break
-
-    # Step 5. 전체 노드에 대해 1회 soft LPA refinement
-    for _ in range(1):
-        updated = False
+        # Step 3. Label Initialization
         for v in G_nx.nodes():
-            scores = defaultdict(float)
-            for n in G_nx.neighbors(v):
-                if labels[n] is not None:
-                    trust = alpha * pagerank[n] + (1 - alpha) * degree[n]
-                    sim = neighborhood_overlap(G_nx, v, n)
-                    scores[labels[n]] += trust * (1 + beta * sim)
-            if scores:
-                best_label = max(scores.items(), key=lambda x: x[1])[0]
-                if labels[v] != best_label:
-                    labels[v] = best_label
-                    updated = True
-        if not updated:
+            labels[v] = core_labels[v] if v in core_labels else None
+
+        # Step 4. LPA refinement on periphery
+        for _ in range(max_iter):
+            updated = False
+            for v in V_periphery:
+                neighbor_labels = [labels[n] for n in G_nx.neighbors(v) if labels[n] is not None]
+                if neighbor_labels:
+                    most_common = Counter(neighbor_labels).most_common(1)[0][0]
+                    if labels[v] != most_common:
+                        labels[v] = most_common
+                        updated = True
+            if not updated:
+                break
+
+        # Step 5. Modularity Approximation (using edge agreement)
+        intra_edges = 0
+        for u, v in G_nx.edges():
+            if labels[u] == labels[v]:
+                intra_edges += 1
+        mod_approx = intra_edges / G_nx.number_of_edges()
+
+        # Early stop if modularity converges
+        if abs(mod_approx - prev_modularity) < entropy_threshold:
             break
+        prev_modularity = mod_approx
 
     return labels
