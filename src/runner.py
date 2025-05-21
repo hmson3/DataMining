@@ -2,8 +2,6 @@ import os
 import time
 import csv
 import networkx as nx
-import sys
-import random
 from leiden_lpa import leiden_lpa_hybrid
 from evaluation import compute_modularity, compute_nmi
 

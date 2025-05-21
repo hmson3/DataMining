@@ -1,18 +1,27 @@
 import pandas as pd
+from scipy.stats import zscore
 
-# 불러오기 및 전처리
+# CSV 불러오기
 df = pd.read_csv("results/results_ratio.csv")
 df = df[df["Algorithm"].str.startswith("Leiden-LPA-coreratio_")]
 
-# core_ratio 값 추출
+# core_ratio 추출
 df["core_ratio"] = df["Algorithm"].str.extract(r"coreratio_(\d\.\d)").astype(float)
-
-# 정렬용 정보
 df["n"] = df["Graph"].str.extract(r"n(\d+)").astype(int)
 df["mu"] = df["Graph"].str.extract(r"mu(\d+)").astype(int)
 
-# 집계
-summary = df.groupby(["Graph", "core_ratio"]).agg({
+def remove_outliers(group):
+    z_cols = ["Time (s)", "Modularity", "NMI"]
+    mask = pd.Series([True] * len(group), index=group.index)
+    for col in z_cols:
+        if group[col].std() > 1e-8:
+            mask &= abs(zscore(group[col], nan_policy="omit")) < 2
+    return group[mask]
+
+df_clean = df.groupby(["Graph", "core_ratio"], group_keys=False).apply(remove_outliers)
+
+# 요약 집계
+summary = df_clean.groupby(["Graph", "core_ratio"]).agg({
     "Time (s)": ["mean", "std"],
     "Modularity": ["mean", "std"],
     "NMI": ["mean", "std"]
@@ -32,7 +41,7 @@ summary["Time (s)"] = summary.apply(lambda row: format_mean_std(row["Time_mean"]
 summary["Modularity"] = summary.apply(lambda row: format_mean_std(row["Mod_mean"], row["Mod_std"]), axis=1)
 summary["NMI"] = summary.apply(lambda row: format_mean_std(row["NMI_mean"], row["NMI_std"]), axis=1)
 
-# 정렬 및 저장
+# 저장
 summary = summary.sort_values(by=["Graph", "Core Ratio"])
 summary = summary[["Graph", "Core Ratio", "Time (s)", "Modularity", "NMI"]]
 summary.to_csv("results/summary_ratio.csv", index=False)

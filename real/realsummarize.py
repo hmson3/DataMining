@@ -4,7 +4,7 @@ import pandas as pd
 ALGORITHM_VERSION = "Leiden-LPA-v10"
 
 # 불러오기 및 전처리
-df = pd.read_csv(f"realresults/results_{ALGORITHM_VERSION}.csv")
+df = pd.read_csv(f"results/results_{ALGORITHM_VERSION}.csv")
 df = df[df["Algorithm"].isin(["Leiden", ALGORITHM_VERSION])]
 
 # 중복 제거 (선택)
@@ -35,6 +35,6 @@ summary["NMI"] = summary.apply(lambda row: format_mean_std(row["NMI_mean"], row[
 
 # 결과 저장
 summary = summary[["Graph", "Algorithm", "Time (s)", "Modularity", "NMI"]]
-versioned_path = f"realresults/summary_{ALGORITHM_VERSION}.csv"
+versioned_path = f"results/summary_{ALGORITHM_VERSION}.csv"
 summary.to_csv(versioned_path, index=False)
 print(f"✅ {versioned_path} SAVED!")

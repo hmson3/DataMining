@@ -1,9 +1,0 @@
-Graph,Algorithm,Time (s),Modularity,NMI
-com-dblp,Leiden,82.7057 (±nan),0.8299 (±nan),0.4134 (±nan)
-com-dblp,Leiden-LPA-v6,9.9296 (±nan),0.8036 (±nan),0.3583 (±nan)
-com-youtube,Leiden,1361.7195 (±nan),0.7315 (±nan),0.4639 (±nan)
-com-youtube,Leiden-LPA-v6,70.0694 (±nan),0.7041 (±nan),0.3543 (±nan)
-email-Eu-core,Leiden,0.0773 (±nan),0.4327 (±nan),0.5836 (±nan)
-email-Eu-core,Leiden-LPA-v6,0.0497 (±nan),0.3928 (±nan),0.4272 (±nan)
-karate,Leiden,0.0010 (±nan),0.4198 (±nan),0.5878 (±nan)
-karate,Leiden-LPA-v6,0.0005 (±nan),0.3715 (±nan),0.8372 (±nan)

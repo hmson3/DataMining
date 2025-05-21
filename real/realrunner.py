@@ -37,7 +37,7 @@ def load_graph_and_labels(dataset_folder):
 
     return G, gt
 
-def run_experiment(dataset_base="realdata", repeat=1, output_csv=f"realresults/results_{ALGORITHM_VERSION}.csv"):
+def run_experiment(dataset_base="realdata", repeat=5, output_csv=f"results/results_{ALGORITHM_VERSION}.csv"):
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
     fieldnames = ["Graph", "Repeat", "Algorithm", "Time (s)", "Modularity", "NMI"]
 
