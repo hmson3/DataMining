@@ -6,7 +6,7 @@ from leiden_lpa import leiden_lpa_hybrid
 from evaluation import compute_modularity, compute_nmi
 
 # 버전 이름을 명확히 설정
-ALGORITHM_VERSION = "Leiden-LPA-v10"
+ALGORITHM_VERSION = "Leiden-LPA-v11"
 
 def run_leiden(G, seed=None):
     import igraph as ig
