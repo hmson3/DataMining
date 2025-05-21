@@ -4,9 +4,11 @@ import csv
 import networkx as nx
 import sys
 import random
-sys.path.append("./src")
 from leiden_lpa import leiden_lpa_hybrid
 from evaluation import compute_modularity, compute_nmi
+
+# 버전 이름을 명확히 설정
+ALGORITHM_VERSION = "Leiden-LPA-v10"
 
 def run_leiden(G, seed=None):
     import igraph as ig
@@ -34,7 +36,7 @@ def load_graph_and_labels(dataset_folder):
 
     return G, gt
 
-def run_experiment(dataset_base="datasets", repeat=10, output_csv="results/repeat_raw_results_ratio.csv"):
+def run_experiment(dataset_base="../datasets", repeat=10, output_csv=f"results/results_{ALGORITHM_VERSION}.csv"):
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
     fieldnames = ["Graph", "Repeat", "Algorithm", "Time (s)", "Modularity", "NMI"]
 
@@ -52,27 +54,38 @@ def run_experiment(dataset_base="datasets", repeat=10, output_csv="results/repea
             print(f"[INFO] Running on {dataset_name}...")
             G, gt = load_graph_and_labels(folder)
 
-            for core_ratio in [0.2, 0.4, 0.6, 0.8, 1.0]:
-                algo_name = f"Leiden-LPA-coreratio_{core_ratio}"
-                print(f"  [SUB] core_ratio = {core_ratio}...")
+            for i in range(repeat):
+                seed = i + 42
 
-                for i in range(repeat):
-                    seed = i + 42
+                # 개선 알고리즘 실행
+                start = time.time()
+                hybrid_labels = leiden_lpa_hybrid(G, seed=seed)
+                t1 = time.time() - start
+                m1 = compute_modularity(G, hybrid_labels)
+                n1 = compute_nmi(hybrid_labels, gt)
+                writer.writerow({
+                    "Graph": dataset_name,
+                    "Repeat": i,
+                    "Algorithm": ALGORITHM_VERSION,
+                    "Time (s)": round(t1, 4),
+                    "Modularity": round(m1, 4),
+                    "NMI": round(n1, 4)
+                })
 
-                    start = time.time()
-                    labels = leiden_lpa_hybrid(G, core_ratio=core_ratio, seed=seed)
-                    t = time.time() - start
-                    m = compute_modularity(G, labels)
-                    n = compute_nmi(labels, gt)
-
-                    writer.writerow({
-                        "Graph": dataset_name,
-                        "Repeat": i,
-                        "Algorithm": algo_name,
-                        "Time (s)": round(t, 4),
-                        "Modularity": round(m, 4),
-                        "NMI": round(n, 4)
-                    })
+                # Leiden 원형 알고리즘 실행
+                start = time.time()
+                leiden_labels = run_leiden(G, seed=seed)
+                t2 = time.time() - start
+                m2 = compute_modularity(G, leiden_labels)
+                n2 = compute_nmi(leiden_labels, gt)
+                writer.writerow({
+                    "Graph": dataset_name,
+                    "Repeat": i,
+                    "Algorithm": "Leiden",
+                    "Time (s)": round(t2, 4),
+                    "Modularity": round(m2, 4),
+                    "NMI": round(n2, 4)
+                })
 
 if __name__ == "__main__":
     run_experiment()

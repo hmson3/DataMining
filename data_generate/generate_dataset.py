@@ -9,7 +9,7 @@ mu_values = [0.1, 0.3, 0.5]
 avg_degree = 10
 tau1 = 3
 tau2 = 1.5
-base_dir = "datasets"
+base_dir = "../datasets"
 
 for n in node_sizes:
     min_community = 5 if n <= 500 else 10 if n <= 1000 else 20

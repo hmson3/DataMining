@@ -1,7 +1,7 @@
 import pandas as pd
 
 # 불러오기 및 전처리
-df = pd.read_csv("results/repeat_raw_results_ratio.csv")
+df = pd.read_csv("results/results_ratio.csv")
 df = df[df["Algorithm"].str.startswith("Leiden-LPA-coreratio_")]
 
 # core_ratio 값 추출
@@ -35,5 +35,5 @@ summary["NMI"] = summary.apply(lambda row: format_mean_std(row["NMI_mean"], row[
 # 정렬 및 저장
 summary = summary.sort_values(by=["Graph", "Core Ratio"])
 summary = summary[["Graph", "Core Ratio", "Time (s)", "Modularity", "NMI"]]
-summary.to_csv("results/summary_core_ratio_comparison.csv", index=False)
-print("✅ summary_core_ratio_comparison_ratio.csv SAVED!")
+summary.to_csv("results/summary_ratio.csv", index=False)
+print("✅ summary_ratio.csv SAVED!")

@@ -4,7 +4,7 @@ import csv
 import networkx as nx
 import sys
 import random
-sys.path.append("./src")
+sys.path.append("../src")
 from leiden_lpa import leiden_lpa_hybrid
 from evaluation import compute_modularity, compute_nmi
 
