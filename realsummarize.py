@@ -1,7 +1,7 @@
 import pandas as pd
 
 # 버전 설정 (예: "Leiden-LPA-v1")
-ALGORITHM_VERSION = "Leiden-LPA-v6"
+ALGORITHM_VERSION = "Leiden-LPA-v10"
 
 # 불러오기 및 전처리
 df = pd.read_csv(f"realresults/results_{ALGORITHM_VERSION}.csv")
