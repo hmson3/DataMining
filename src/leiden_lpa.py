@@ -43,17 +43,11 @@ def leiden_lpa_hybrid(G_nx, core_ratio=0.4, seed=None, max_iter=10):
     # 전체 라벨 초기화
     labels = {v: core_labels[v] if v in core_labels else None for v in G_nx.nodes()}
 
-    # 비코어 노드 lpa
-    for _ in range(max_iter):
-        updated = False
-        for v in V_periphery:
-            neighbor_labels = [labels[n] for n in G_nx.neighbors(v) if labels[n] is not None]
-            if neighbor_labels:
-                most_common = Counter(neighbor_labels).most_common(1)[0][0]
-                if labels[v] != most_common:
-                    labels[v] = most_common
-                    updated = True
-        if not updated:
-            break
+    # 비코어 노드 라벨 1회만 전파
+    for v in V_periphery:
+        neighbor_labels = [labels[n] for n in G_nx.neighbors(v) if labels[n] is not None]
+        if neighbor_labels:
+            most_common = Counter(neighbor_labels).most_common(1)[0][0]
+            labels[v] = most_common
 
     return labels
